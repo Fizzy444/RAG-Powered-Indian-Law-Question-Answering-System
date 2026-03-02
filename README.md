@@ -67,22 +67,23 @@ Language codes used:
 - Tamil → `tam_Taml`
 
 
-🔐 Offline Support
-FAISS index runs locally
-Mistral runs locally
-NLLB translation model stored locally
-No external API calls required after setup
+### 🔐 Offline Support
+
+- FAISS index runs locally
+- Mistral runs locally
+- NLLB translation model stored locally
+- No external API calls required after setup
 
 
-⚡ Future Improvements
-Tamil → English query support
-Conversation memory
-Legal glossary explanations
-Confidence scoring
-Hybrid search (BM25 + FAISS)
-Additional Indian language support
+### ⚡ Future Improvements
+- Tamil → English query support
+- Conversation memory
+- Legal glossary explanations
+- Confidence scoring
+- Hybrid search (BM25 + FAISS)
+- Additional Indian language support
 
 
-📜 License
-This project is for educational and research purposes.
-Not a substitute for professional legal advice.
+### 📜 License
+- This project is for educational and research purposes.
+- Not a substitute for professional legal advice.
