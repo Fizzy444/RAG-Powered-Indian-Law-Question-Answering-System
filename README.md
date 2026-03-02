@@ -4,7 +4,6 @@ An AI-powered Indian Legal Research Assistant built using Retrieval-Augmented Ge
 
 This system answers questions about Indian law with cited sources and supports multilingual output (English → Tamil).
 
----
 
 ## 🚀 Features
 
@@ -16,7 +15,6 @@ This system answers questions about Indian law with cited sources and supports m
 - ⚡ Streaming response support
 - 🎨 Clean chat-based UI
 
----
 
 ## 🏗 Architecture
 
@@ -34,7 +32,7 @@ NLLB Translation (Optional)
 ↓  
 Frontend Streaming Output  
 
----
+
 
 ## 🧠 Models Used
 
@@ -44,7 +42,6 @@ Frontend Streaming Output
 - Runs locally via LLM server (`http://127.0.0.1:8080/completion`)
 - Generates structured, citation-aware answers.
 
----
 
 ### 2️⃣ FAISS Vector Index
 
@@ -52,14 +49,12 @@ Frontend Streaming Output
 - Performs semantic similarity search.
 - Retrieves top-k relevant legal sections.
 
----
 
 ### 3️⃣ Cross-Encoder Reranker
 
 - Improves retrieval precision.
 - Re-ranks retrieved documents before passing to LLM.
-
----
+- 
 
 ### 4️⃣ NLLB-200 (facebook/nllb-200-distilled-600M)
 
@@ -71,13 +66,13 @@ Language codes used:
 - English → `eng_Latn`
 - Tamil → `tam_Taml`
 
----
 
 🔐 Offline Support
 FAISS index runs locally
 Mistral runs locally
 NLLB translation model stored locally
 No external API calls required after setup
+
 
 ⚡ Future Improvements
 Tamil → English query support
@@ -86,6 +81,7 @@ Legal glossary explanations
 Confidence scoring
 Hybrid search (BM25 + FAISS)
 Additional Indian language support
+
 
 📜 License
 This project is for educational and research purposes.
