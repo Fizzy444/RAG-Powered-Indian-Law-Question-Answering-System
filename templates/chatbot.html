@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+    <title>Indian Legal Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/chatbot.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚖️ Legal AI Assistant</h1>
+            <p>Ask questions about Indian Law</p>
+        </header>
+
+        <div class="chat-box" id="chatBox">
+            <div class="message bot-message">
+                Hello! I am your Indian legal research assistant. How can I help you today?
+            </div>
+        </div>
+
+        <div class="input-area">
+
+            <select id="languageSelect" class="language-select">
+                <option value="en">English</option>
+                <!-- <option value="hi">Hindi</option> -->
+                <option value="ta">Tamil</option>
+                <!-- <option value="te">Telugu</option>
+                <option value="kn">Kannada</option>
+                <option value="ml">Malayalam</option>
+                <option value="mr">Marathi</option>
+                <option value="gu">Gujarati</option>
+                <option value="pa">Punjabi</option>
+                <option value="bn">Bengali</option> -->
+            </select>
+
+            <input type="text" 
+                id="userInput" 
+                placeholder="Type your legal query here..." 
+                onkeypress="handleKeyPress(event)">
+
+            <button onclick="sendQuery()" id="sendBtn">Ask</button>
+        </div>
+
+        <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

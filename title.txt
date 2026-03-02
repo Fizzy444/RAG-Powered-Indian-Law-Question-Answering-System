@@ -1,0 +1,5 @@
+A Retrieval-Augmented Legal AI System for Indian Statutory Law
+
+llama-server --host 0.0.0.0 --port 8080 --model "D:/Indian-law-llm/models/TheBloke_Mistral-7B-Instruct-v0.2-GGUF_mistral-7b-instruct-v0.2.Q4_K_M.gguf"
+
+llama-server -ngl 0 --host 0.0.0.0 --port 8080 -m "D:/Indian-law-llm/models/TheBloke_Mistral-7B-Instruct-v0.2-GGUF_mistral-7b-instruct-v0.2.Q4_K_M.gguf" -t 4 -c 2048
