@@ -97,12 +97,22 @@ def chatbot():
 @app.route('/ask', methods=['POST'])
 def ask():
     data = request.json
-    query = data.get("query")
+    if not data:
+        return Response("Invalid request.", mimetype="text/plain", status=400)
+    
+    query = data.get("query", "").strip()
+    if not query:
+        return Response("Empty query.", mimetype="text/plain", status=400)
+
     lang_code = data.get("language", "en")
     target_lang = LANG_MAP.get(lang_code, "eng_Latn")
 
-    intent = classify_intent(llm, query)
-    print("Intent:", intent)
+    try:
+        intent = classify_intent(llm, query)
+        print("Intent:", intent)
+    except Exception as e:
+        print("Intent classification error:", e)
+        return Response("Error classifying intent.", mimetype="text/plain", status=500)
 
     if "GREETING" in intent:
         greeting = "Hello! I am an Indian legal research assistant. You can ask me questions about Indian law."
@@ -110,11 +120,21 @@ def ask():
             greeting = translate_text(greeting, target_lang)
         return Response(greeting, mimetype="text/plain")
 
-    initial = retriever.search(query, k=10)
+    try:
+        initial = retriever.search(query, k=10)
+    except Exception as e:
+        print("Retrieval error:", e)
+        return Response("Error retrieving documents.", mimetype="text/plain", status=500)
+
     if not initial:
         return Response("No relevant legal documents found.", mimetype="text/plain")
 
-    reranked = reranker.rerank(query, initial)
+    try:
+        reranked = reranker.rerank(query, initial)
+    except Exception as e:
+        print("Reranking error:", e)
+        return Response("Error reranking documents.", mimetype="text/plain", status=500)
+
     if not reranked:
         return Response("No relevant legal documents found.", mimetype="text/plain")
 
@@ -122,30 +142,31 @@ def ask():
     prompt = build_context(query, reranked)
 
     def generate():
-        full_output = ""
-
-        for chunk in llm.generate_stream(prompt):
-            full_output += chunk
-
-        if target_lang != "eng_Latn":
-            full_output = translate_text(full_output, target_lang)
-
-        yield full_output
-
-        sources_text = "\n\nSources:\n"
-
-        for r in reranked:
-            meta = r["metadata"]
-
-            if meta["document_type"] == "constitution":
-                sources_text += f"- Constitution of India, Article {meta['article']}\n"
+        try:
+            if target_lang != "eng_Latn":
+                full_output = ""
+                for chunk in llm.generate_stream(prompt):
+                    full_output += chunk
+                yield translate_text(full_output, target_lang)
             else:
-                sources_text += f"- {meta['law_name']}, Section {meta['section']}\n"
+                for chunk in llm.generate_stream(prompt):
+                    yield chunk
 
-        if target_lang != "eng_Latn":
-            sources_text = translate_text(sources_text, target_lang)
+            sources_text = "\n\nSources:\n"
+            for r in reranked:
+                meta = r["metadata"]
+                if meta["document_type"] == "constitution":
+                    sources_text += f"- Constitution of India, Article {meta['article']}\n"
+                else:
+                    sources_text += f"- {meta['law_name']}, Section {meta['section']}\n"
 
-        yield sources_text
+            if target_lang != "eng_Latn":
+                sources_text = translate_text(sources_text, target_lang)
+            yield sources_text
+
+        except Exception as e:
+            print("Generation error:", e)
+            yield f"Error generating response: {str(e)}"
 
     return Response(stream_with_context(generate()), mimetype='text/plain')
 
