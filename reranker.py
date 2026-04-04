@@ -2,7 +2,7 @@ from sentence_transformers import CrossEncoder
 
 class LegalReranker:
     def __init__(self):
-        self.model = CrossEncoder("./models/ms-marco-MiniLM-L-6-v2")
+        self.model = CrossEncoder(r"D:\Models\ms-marco-MiniLM-L-6-v2")
 
     def rerank(self, query, docs):
         pairs = [(query, d["text"]) for d in docs]

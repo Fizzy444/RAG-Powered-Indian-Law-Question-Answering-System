@@ -1,57 +1,55 @@
-from flask import Flask, render_template, request, Response, stream_with_context
+from flask import Flask, render_template, request, Response, stream_with_context, session, redirect, url_for, jsonify
 from RAG.retriever import LegalRetriever
 from reranker import LegalReranker
 from context_builder import build_context
 from llm_gen import LegalAnswerGenerator
-
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from functools import wraps
+from db import init_db, create_user, get_user_by_email, verify_password
 import torch
 
 app = Flask(__name__)
+app.secret_key = "change_this_to_a_long_random_secret_key"
 
 retriever = LegalRetriever(
     "./RAG/vectorstore_v2/legal.index",
     "./RAG/cleaned/legal_corpus_v2.json"
 )
-
 reranker = LegalReranker()
 llm = LegalAnswerGenerator(url="http://127.0.0.1:8080/completion")
 
 translator_tokenizer = AutoTokenizer.from_pretrained(
-    r"D:\Indian-law-llm\models\nllb",
+    r"D:\Models\nllb",
     local_files_only=True
 )
-
 translator_model = AutoModelForSeq2SeqLM.from_pretrained(
-    r"D:\Indian-law-llm\models\nllb",
+    r"D:\Models\nllb",
     local_files_only=True
 ).to("cpu")
-
 translator_model.eval()
 
 LANG_MAP = {
     "en": "eng_Latn",
-    # "hi": "hin_Deva",
     "ta": "tam_Taml"
-    # "te": "tel_Telu",
-    # "kn": "kan_Knda",
-    # "ml": "mal_Mlym",
-    # "mr": "mar_Deva",
-    # "gu": "guj_Gujr",
-    # "pa": "pan_Guru",
-    # "bn": "ben_Beng"
 }
+
+init_db()
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect(url_for("auth"))
+        return f(*args, **kwargs)
+    return decorated
 
 def classify_intent(llm, query):
     prompt = f"""
 Classify the following user query into exactly one category:
-
 Categories:
 - GREETING
 - OTHER
-
 Query: "{query}"
-
 Return only the category name.
 IMPORTANT:
 DON'T say 'ANSWER:', just give only one of the 2 given words.
@@ -62,44 +60,85 @@ DON'T say 'ANSWER:', just give only one of the 2 given words.
 def translate_text(text, target_lang):
     if not text.strip():
         return text
-
     translator_tokenizer.src_lang = "eng_Latn"
-
     inputs = translator_tokenizer(
         text,
         return_tensors="pt",
         padding=True,
         truncation=True
     )
-
     target_lang_id = translator_tokenizer.convert_tokens_to_ids(target_lang)
-
     with torch.no_grad():
         outputs = translator_model.generate(
             **inputs,
             forced_bos_token_id=target_lang_id,
             max_length=1024
         )
-
-    return translator_tokenizer.decode(
-        outputs[0],
-        skip_special_tokens=True
-    )
+    return translator_tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 @app.route('/')
 def index():
     return render_template('home.html')
 
+@app.route('/auth')
+def auth():
+    if "user_id" in session:
+        return redirect(url_for("chatbot"))
+    return render_template('auth.html')
+
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    data = request.json
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+    password = (data.get("password") or "").strip()
+
+    if not name or not email or not password:
+        return jsonify({"error": "All fields are required."}), 400
+    if len(password) < 8:
+        return jsonify({"error": "Password must be at least 8 characters."}), 400
+    if get_user_by_email(email):
+        return jsonify({"error": "An account with this email already exists."}), 409
+
+    user = create_user(name, email, password)
+    session["user_id"] = user["id"]
+    session["user_name"] = user["name"]
+    return jsonify({"ok": True, "redirect": "/chatbot"}), 201
+
+@app.route('/api/signin', methods=['POST'])
+def signin():
+    data = request.json
+    email = (data.get("email") or "").strip().lower()
+    password = (data.get("password") or "").strip()
+
+    if not email or not password:
+        return jsonify({"error": "Email and password are required."}), 400
+
+    user = get_user_by_email(email)
+    if not user or not verify_password(password, user["password_hash"]):
+        return jsonify({"error": "Invalid email or password."}), 401
+
+    session["user_id"] = user["id"]
+    session["user_name"] = user["name"]
+    return jsonify({"ok": True, "redirect": "/chatbot"})
+
+@app.route('/api/signout', methods=['POST'])
+def signout():
+    session.clear()
+    return jsonify({"ok": True, "redirect": "/"})
+
 @app.route('/chatbot')
+@login_required
 def chatbot():
     return render_template('chatbot.html')
 
 @app.route('/ask', methods=['POST'])
+@login_required
 def ask():
     data = request.json
     if not data:
         return Response("Invalid request.", mimetype="text/plain", status=400)
-    
+
     query = data.get("query", "").strip()
     if not query:
         return Response("Empty query.", mimetype="text/plain", status=400)
@@ -163,7 +202,6 @@ def ask():
             if target_lang != "eng_Latn":
                 sources_text = translate_text(sources_text, target_lang)
             yield sources_text
-
         except Exception as e:
             print("Generation error:", e)
             yield f"Error generating response: {str(e)}"
@@ -171,4 +209,4 @@ def ask():
     return Response(stream_with_context(generate()), mimetype='text/plain')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)

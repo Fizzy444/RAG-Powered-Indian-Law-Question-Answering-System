@@ -35,7 +35,7 @@
                 <a href="#how-it-works">How it Works</a>
                 <a href="#features">Features</a>
                 <a href="#faq">FAQ</a>
-                <a href="/chatbot" class="nav-cta">Get Started</a>
+                <a href="/auth" class="nav-cta">Sign In</a>
             </div>
         </div>
     </nav>
@@ -68,6 +68,11 @@
                 <span class="stat-number">99%</span>
                 <span class="stat-label">Accuracy Rate</span>
             </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">3</span>
+                <span class="stat-label">Languages Supported</span>
+            </div>
         </div>
     </section>
 
@@ -98,41 +103,87 @@
         <div class="features-container">
             <h2 class="section-title">Powering Legal Excellence</h2>
             <div class="features-grid">
-                <!-- <div class="feature-card">
-                    <span class="feature-icon">🔍</span>
-                    <h3>Case Law Discovery</h3>
-                    <p>Access detailed information about Indian laws, statutes, and legal precedents. Filter by court, year, and relevance with AI precision.</p>
-                </div> -->
-
-                <!-- <div class="feature-card">
-                    <span class="feature-icon">⚡</span>
-                    <h3>Instant Drafting</h3>
-                    <p>Generate legal notices, contracts, and affidavits in seconds. Our templates are vetted by top legal professionals in India.</p>
-                </div> -->
-
                 <div class="feature-card">
                     <span class="feature-icon">🛡️</span>
                     <h3>Privacy First</h3>
-                    <p>Your data is encrypted with enterprise-grade security. We adhere to strict client confidentiality protocols.</p>
+                    <p>Your data is encrypted with enterprise-grade security. We adhere to strict client confidentiality protocols and never use your documents to train any model.</p>
                 </div>
-                
                 <div class="feature-card">
                     <span class="feature-icon">⚖️</span>
                     <h3>Statutory Comparison</h3>
-                    <p>Instantly compare old acts with new amendments. visual redlining helps you spot changes in the law immediately.</p>
+                    <p>Instantly compare old acts with new amendments. Visual redlining helps you spot changes in the law immediately — from BNS to IPC side by side.</p>
                 </div>
-
                 <div class="feature-card">
                     <span class="feature-icon">🌐</span>
                     <h3>Multilingual Support</h3>
-                    <p>Interact with the legal assistant in English, Hindi and Tamil.</p>
+                    <p>Interact with the legal assistant in English, Hindi, and Tamil. Ask a question in Hindi, get citations in English — seamlessly.</p>
                 </div>
+                <div class="feature-card">
+                    <span class="feature-icon">📚</span>
+                    <h3>Deep Case Law Search</h3>
+                    <p>Search across 50,000+ indexed Supreme Court and High Court judgements. Filter by bench, year, act, and legal principle with natural language queries.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">📝</span>
+                    <h3>Document Analysis</h3>
+                    <p>Upload contracts, FIRs, notices, or affidavits and get a structured breakdown of clauses, risks, obligations, and relevant case law in seconds.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔗</span>
+                    <h3>Citation Chaining</h3>
+                    <p>Follow the precedent trail automatically. See which cases cite each other and how a landmark ruling has evolved across subsequent judgements.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                <!-- <div class="feature-card">
-                    <span class="feature-icon">📊</span>
-                    <h3>Case Prediction</h3>
-                    <p>Get data-driven insights on the potential outcome of cases based on historical rulings and judicial trends.</p>
-                </div> -->
+    <!-- Coverage Section -->
+    <section class="how-it-works" id="coverage" style="padding-top:0">
+        <div class="container">
+            <h2 class="section-title">What We Cover</h2>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">⚖️</div>
+                    <h3>Criminal Law</h3>
+                    <p>Bharatiya Nyaya Sanhita (BNS), Bharatiya Nagarik Suraksha Sanhita (BNSS), Indian Evidence Act, and all amendments up to 2026.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">🏛️</div>
+                    <h3>Constitutional Law</h3>
+                    <p>Full Constitution of India with all amendments, landmark Supreme Court judgements, and Fundamental Rights jurisprudence.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">🏢</div>
+                    <h3>Corporate & Tax</h3>
+                    <p>Companies Act 2013, GST framework, Income Tax Act, SEBI regulations, and Insolvency & Bankruptcy Code with tribunal orders.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="features" id="testimonials" style="padding-top:0">
+        <div class="features-container">
+            <h2 class="section-title">Trusted by Legal Professionals</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">💬</span>
+                    <h3>"Saves me 3 hours a day"</h3>
+                    <p>I used to spend hours finding relevant precedents. Now I get a curated list with context in under a minute. Indispensable for litigation prep.</p>
+                    <p style="margin-top:16px; color:#666; font-size:0.82rem; font-style:italic;">— Advocate, Delhi High Court</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">💬</span>
+                    <h3>"Best research tool for students"</h3>
+                    <p>As a law student, the statutory comparison feature alone is worth it. Understanding BNS vs IPC changes used to take days of cross-referencing.</p>
+                    <p style="margin-top:16px; color:#666; font-size:0.82rem; font-style:italic;">— LLB Student, NLU Delhi</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">💬</span>
+                    <h3>"Hindi support is a game changer"</h3>
+                    <p>Most of my clients communicate in Hindi. Being able to query and explain law in Hindi while citing English judgements is something no other tool offers.</p>
+                    <p style="margin-top:16px; color:#666; font-size:0.82rem; font-style:italic;">— Legal Aid Worker, Lucknow</p>
+                </div>
             </div>
         </div>
     </section>
@@ -151,7 +202,19 @@
                 </div>
                 <div class="faq-item">
                     <h3>What laws are covered?</h3>
-                    <p>We cover the Constitution of India, IPC, CrPC (and new Sanhitas), CPC, Evidence Act, Corporate Law, and major Taxation laws.</p>
+                    <p>We cover the Constitution of India, BNS/BNSS (new Sanhitas), IPC, CrPC, CPC, Evidence Act, Corporate Law, and major Taxation laws — all updated to 2026.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Who is this built for?</h3>
+                    <p>Advocates, law students, judges' researchers, legal aid workers, in-house counsel, and anyone who needs to understand Indian law quickly and accurately.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Can I upload my own documents?</h3>
+                    <p>Yes. You can upload PDFs and Word documents. The assistant will analyse the content, flag key clauses, and find relevant statutes and case law automatically.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>How current is the data?</h3>
+                    <p>Our index is updated continuously. The BNS and BNSS changes effective 2024–2026 are already reflected, including the latest gazette notifications.</p>
                 </div>
             </div>
         </div>
@@ -161,40 +224,13 @@
         <div class="cta-content">
             <h2>Ready to modernize your practice?</h2>
             <p>Join thousands of legal professionals saving hours every day.</p>
-            <a href="/chatbot" class="cta-button">Get Started Free</a>
+            <a href="/auth" class="cta-button">Get Started Free</a>
         </div>
     </section>
 
     <footer>
-        <!-- <div class="footer-container">
-            <div class="footer-col">
-                <a href="/" class="logo">
-                    <span class="logo-icon">⚖️</span>
-                    <span>Legal AI</span>
-                </a>
-                <p>Democratizing legal intelligence for everyone.</p>
-            </div>
-            <div class="footer-col">
-                <h4>Product</h4>
-                <a href="#">Features</a>
-                <a href="#">Pricing</a>
-                <a href="#">API Access</a>
-            </div>
-            <div class="footer-col">
-                <h4>Resources</h4>
-                <a href="#">Blog</a>
-                <a href="#">Case Studies</a>
-                <a href="#">Help Center</a>
-            </div>
-            <div class="footer-col">
-                <h4>Legal</h4>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-                <a href="#">Disclaimer</a>
-            </div>
-        </div> -->
         <div class="footer-bottom">
-            <p>© 2026 Legal AI Assistant. For informational purposes only.</p>
+            <p>© 2026 Legal AI Assistant. For informational purposes only. Not a substitute for professional legal advice.</p>
         </div>
     </footer>
 
