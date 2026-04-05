@@ -5,7 +5,11 @@ from context_builder import build_context
 from llm_gen import LegalAnswerGenerator
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from functools import wraps
-from db import init_db, create_user, get_user_by_email, verify_password
+from db import (
+    init_db, create_user, get_user_by_email, verify_password,
+    get_chats_for_user, create_chat, update_chat_title, delete_chat,
+    add_message, get_messages_for_chat
+)
 import torch
 
 app = Flask(__name__)
@@ -131,6 +135,49 @@ def signout():
 @login_required
 def chatbot():
     return render_template('chatbot.html')
+
+# ── Chat history API ──────────────────────────────────────────
+
+@app.route('/api/chats', methods=['GET'])
+@login_required
+def list_chats():
+    chats = get_chats_for_user(session["user_id"])
+    return jsonify(chats)
+
+@app.route('/api/chats/<chat_id>', methods=['GET'])
+@login_required
+def get_chat(chat_id):
+    messages = get_messages_for_chat(chat_id, session["user_id"])
+    if messages is None:
+        return jsonify({"error": "Chat not found."}), 404
+    return jsonify(messages)
+
+@app.route('/api/chats/<chat_id>', methods=['DELETE'])
+@login_required
+def remove_chat(chat_id):
+    delete_chat(chat_id, session["user_id"])
+    return jsonify({"ok": True})
+
+@app.route('/api/chats/<chat_id>/message', methods=['POST'])
+@login_required
+def save_message(chat_id):
+    data = request.json
+    role = data.get("role")
+    content = (data.get("content") or "").strip()
+    title = (data.get("title") or "").strip()
+
+    if role not in ("user", "bot") or not content:
+        return jsonify({"error": "Invalid payload."}), 400
+
+    if role == "user":
+        create_chat(chat_id, session["user_id"], title or content[:48])
+        if title:
+            update_chat_title(chat_id, title)
+
+    add_message(chat_id, role, content)
+    return jsonify({"ok": True})
+
+# ── Ask (RAG) ─────────────────────────────────────────────────
 
 @app.route('/ask', methods=['POST'])
 @login_required

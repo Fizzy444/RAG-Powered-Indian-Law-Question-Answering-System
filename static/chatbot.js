@@ -1,22 +1,31 @@
 ﻿/* ─────────────────────────────────────────
-   History management (localStorage)
+   State
 ───────────────────────────────────────── */
-const STORAGE_KEY = 'legalai_history';
+let currentChatId   = null;
+let sidebarOpen     = true;
 
-function loadHistory() {
-    try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    } catch {
-        return [];
-    }
+/* ─────────────────────────────────────────
+   ID generator
+───────────────────────────────────────── */
+function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-function saveHistory(history) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+/* ─────────────────────────────────────────
+   Escape HTML
+───────────────────────────────────────── */
+function escapeHtml(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 }
 
-function timeAgo(ts) {
-    const diff = Date.now() - ts;
+/* ─────────────────────────────────────────
+   Time formatting
+───────────────────────────────────────── */
+function timeAgo(isoString) {
+    const diff = Date.now() - new Date(isoString + 'Z').getTime();
     const m = Math.floor(diff / 60000);
     const h = Math.floor(diff / 3600000);
     const d = Math.floor(diff / 86400000);
@@ -24,34 +33,68 @@ function timeAgo(ts) {
     if (m < 60) return `${m}m ago`;
     if (h < 24) return `${h}h ago`;
     if (d < 7)  return `${d}d ago`;
-    return new Date(ts).toLocaleDateString();
+    return new Date(isoString).toLocaleDateString();
 }
 
-function renderHistory() {
-    const history = loadHistory();
-    const list    = document.getElementById('historyList');
-    const empty   = document.getElementById('historyEmpty');
+/* ─────────────────────────────────────────
+   API helpers
+───────────────────────────────────────── */
+async function apiGet(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`GET ${url} failed: ${res.status}`);
+    return res.json();
+}
 
-    const existing = list.querySelectorAll('.history-item');
-    existing.forEach(el => el.remove());
+async function apiPost(url, body) {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(`POST ${url} failed: ${res.status}`);
+    return res.json();
+}
 
-    if (history.length === 0) {
+async function apiDelete(url) {
+    const res = await fetch(url, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`DELETE ${url} failed: ${res.status}`);
+    return res.json();
+}
+
+/* ─────────────────────────────────────────
+   Sidebar / history rendering
+───────────────────────────────────────── */
+async function renderHistory() {
+    const list  = document.getElementById('historyList');
+    const empty = document.getElementById('historyEmpty');
+
+    let chats = [];
+    try {
+        chats = await apiGet('/api/chats');
+    } catch {
+        chats = [];
+    }
+
+    list.querySelectorAll('.history-item').forEach(el => el.remove());
+
+    if (chats.length === 0) {
         if (empty) empty.style.display = '';
         return;
     }
     if (empty) empty.style.display = 'none';
 
-    history.slice().reverse().forEach(chat => {
+    chats.forEach(chat => {
         const item = document.createElement('div');
         item.className = 'history-item' + (chat.id === currentChatId ? ' active' : '');
         item.dataset.id = chat.id;
         item.innerHTML = `
             <div class="history-item-text">
                 <div class="history-item-title">${escapeHtml(chat.title)}</div>
-                <div class="history-item-time">${timeAgo(chat.createdAt)}</div>
+                <div class="history-item-time">${timeAgo(chat.created_at)}</div>
             </div>
             <button class="history-item-del" title="Delete">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
                 </svg>
             </button>`;
@@ -61,52 +104,47 @@ function renderHistory() {
             loadChat(chat.id);
         });
 
-        item.querySelector('.history-item-del').addEventListener('click', (e) => {
+        item.querySelector('.history-item-del').addEventListener('click', async (e) => {
             e.stopPropagation();
-            deleteChat(chat.id);
+            try {
+                await apiDelete(`/api/chats/${chat.id}`);
+            } catch { /* ignore */ }
+            if (currentChatId === chat.id) startNewChat();
+            else renderHistory();
         });
 
         list.appendChild(item);
     });
 }
 
-function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function loadChat(id) {
-    const history = loadHistory();
-    const chat    = history.find(c => c.id === id);
-    if (!chat) return;
+/* ─────────────────────────────────────────
+   Load a past chat
+───────────────────────────────────────── */
+async function loadChat(id) {
+    let messages = [];
+    try {
+        messages = await apiGet(`/api/chats/${id}`);
+    } catch {
+        return;
+    }
 
     currentChatId = id;
-    currentMessages = chat.messages.slice();
 
     const chatBox = document.getElementById('chatBox');
     chatBox.innerHTML = '';
 
-    chat.messages.forEach(msg => {
-        appendMessage(msg.role, msg.text);
-    });
-
+    messages.forEach(msg => appendMessage(msg.role, msg.content));
     chatBox.scrollTop = chatBox.scrollHeight;
-    renderHistory();
 
+    await renderHistory();
     if (window.innerWidth <= 640) closeSidebar();
 }
 
-function deleteChat(id) {
-    let history = loadHistory();
-    history = history.filter(c => c.id !== id);
-    saveHistory(history);
-
-    if (currentChatId === id) startNewChat();
-    else renderHistory();
-}
-
+/* ─────────────────────────────────────────
+   New chat
+───────────────────────────────────────── */
 function startNewChat() {
-    currentChatId   = generateId();
-    currentMessages = [];
+    currentChatId = generateId();
 
     const chatBox = document.getElementById('chatBox');
     chatBox.innerHTML = `
@@ -123,39 +161,11 @@ function startNewChat() {
     document.getElementById('userInput').focus();
 }
 
-function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-function saveChatMessage(role, text) {
-    let history = loadHistory();
-    let chat    = history.find(c => c.id === currentChatId);
-
-    if (!chat) {
-        chat = {
-            id: currentChatId,
-            title: text.slice(0, 48) + (text.length > 48 ? '…' : ''),
-            createdAt: Date.now(),
-            messages: []
-        };
-        history.push(chat);
-    }
-
-    chat.messages.push({ role, text });
-    if (role === 'user' && chat.messages.filter(m => m.role === 'user').length === 1) {
-        chat.title = text.slice(0, 48) + (text.length > 48 ? '…' : '');
-    }
-
-    saveHistory(history);
-    renderHistory();
-}
-
 /* ─────────────────────────────────────────
    DOM helpers
 ───────────────────────────────────────── */
 function appendMessage(role, text) {
     const chatBox = document.getElementById('chatBox');
-
     const row = document.createElement('div');
     row.className = `message-row ${role === 'user' ? 'user-row' : 'bot-row'}`;
 
@@ -183,7 +193,7 @@ function getBotMessageEl(row) {
 }
 
 /* ─────────────────────────────────────────
-   Core send logic (your original, adapted)
+   Send query (your original logic, adapted)
 ───────────────────────────────────────── */
 async function sendQuery() {
     const input    = document.getElementById('userInput');
@@ -195,12 +205,22 @@ async function sendQuery() {
 
     if (!message) return;
 
-    input.value = '';
+    input.value      = '';
     sendBtn.disabled = true;
 
+    const chatId = currentChatId;
+
     appendMessage('user', message);
-    saveChatMessage('user', message);
     chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+        await apiPost(`/api/chats/${chatId}/message`, {
+            role:    'user',
+            content: message,
+            title:   message.slice(0, 48) + (message.length > 48 ? '…' : '')
+        });
+        renderHistory();
+    } catch { /* non-blocking */ }
 
     loading.style.display = 'flex';
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -219,7 +239,7 @@ async function sendQuery() {
     botMsg.style.display  = '';
 
     if (language !== 'en') {
-        botMsg.textContent = 'Translating…';
+        botMsg.textContent   = 'Translating…';
         botMsg.style.opacity = '0.5';
     }
 
@@ -233,16 +253,22 @@ async function sendQuery() {
         if (done) break;
         const chunk = decoder.decode(value);
         if (firstChunk) {
-            botMsg.textContent = '';
+            botMsg.textContent   = '';
             botMsg.style.opacity = '1';
             firstChunk = false;
         }
         botMsg.textContent += chunk;
-        fullText += chunk;
-        chatBox.scrollTop = chatBox.scrollHeight;
+        fullText           += chunk;
+        chatBox.scrollTop   = chatBox.scrollHeight;
     }
 
-    saveChatMessage('bot', fullText);
+    try {
+        await apiPost(`/api/chats/${chatId}/message`, {
+            role:    'bot',
+            content: fullText
+        });
+    } catch { /* non-blocking */ }
+
     sendBtn.disabled = false;
     input.focus();
 }
@@ -254,8 +280,6 @@ function handleKeyPress(event) {
 /* ─────────────────────────────────────────
    Sidebar toggle
 ───────────────────────────────────────── */
-let sidebarOpen = true;
-
 function closeSidebar() {
     document.getElementById('sidebar').classList.add('collapsed');
     const overlay = document.getElementById('sidebarOverlay');
@@ -285,10 +309,9 @@ setMobileHeight();
 /* ─────────────────────────────────────────
    Init
 ───────────────────────────────────────── */
-let currentChatId   = generateId();
-let currentMessages = [];
-
 document.addEventListener('DOMContentLoaded', () => {
+    currentChatId = generateId();
+
     renderHistory();
 
     document.getElementById('sidebarToggle').addEventListener('click', () => {
@@ -308,8 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.addEventListener('click', closeSidebar);
     document.body.appendChild(overlay);
 
-    const userInput = document.getElementById('userInput');
-    userInput.addEventListener('focus', () => {
+    document.getElementById('userInput').addEventListener('focus', () => {
         setTimeout(() => {
             const chatBox = document.getElementById('chatBox');
             chatBox.scrollTop = chatBox.scrollHeight;
