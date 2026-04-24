@@ -51,7 +51,7 @@ def classify_intent(llm, query):
     prompt = f"""
 Classify the following user query into exactly one category:
 Categories:
-- GREETING
+- GREETING (Thank you also comes under this)
 - OTHER
 Query: "{query}"
 Return only the category name.
