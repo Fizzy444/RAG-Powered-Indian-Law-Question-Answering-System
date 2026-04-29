@@ -13,7 +13,7 @@ from db import (
 import torch
 
 app = Flask(__name__)
-app.secret_key = "change_this_to_a_long_random_secret_key"
+app.secret_key = "AKSJFNTML2820FN5P04NAS509J0NF03INFQJF98Y2HDKJD0IH2DIOED02DMINVKRGOB"
 
 retriever = LegalRetriever(
     "./RAG/vectorstore_v2/legal.index",
